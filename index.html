@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>LSSD - Recrutement Officiel</title>
+
+  <!-- Icône onglet -->
+  <link rel="icon" type="image/png" href="logo.png">
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin:0; font-family:'Orbitron', sans-serif; background:linear-gradient(180deg,#020617,#0f172a); color:white; }
+    .container { max-width:900px; margin:auto; padding:20px; }
+    h1 { text-align:center; color:#38bdf8; }
+    .question, .rules { background:#020617; padding:15px; border-radius:10px; margin-bottom:15px; box-shadow:0 0 10px #0ea5e9; }
+    label { display:block; margin-bottom:8px; }
+    button { width:100%; padding:15px; background:#22c55e; border:none; font-size:16px; cursor:pointer; border-radius:10px; }
+    .progress { height:10px; background:#1e293b; border-radius:10px; margin-bottom:20px; }
+    .progress-bar { height:100%; width:0%; background:#22c55e; border-radius:10px; }
+    .result { text-align:center; margin-top:50px; }
+    .warning { background:#ef4444; padding:10px; border-radius:10px; text-align:center; margin-bottom:15px; display:none; }
+    .timer { text-align:center; margin-bottom:15px; font-size:18px; }
+    .tabs { display:flex; cursor:pointer; margin-bottom:10px; }
+    .tab { padding:10px 20px; border:1px solid #0ea5e9; border-bottom:none; background:#111; margin-right:5px; border-radius:10px 10px 0 0; }
+    .tab.active { background:#0ea5e9; color:#000; font-weight:bold; }
+    .content { border:1px solid #0ea5e9; padding:20px; border-radius:0 10px 10px 10px; margin-bottom:20px; }
+    img { max-width:100%; height:auto; border-radius:10px; }
+    pre { background:#111; padding:10px; border-radius:10px; overflow-x:auto; }
+  </style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+let canAccess = false;
+let timeLeft = 30;
+const app = document.getElementById("app");
+
+function showRules() {
+  app.innerHTML = `
+    <h1>📜 Règlement LSSD</h1>
+    <div class="warning" id="warning">⚠️ NE GRUGE PAS ET PENSE À BIEN LIRE !</div>
+    <div class="timer">Temps restant : <span id="time">30</span>s</div>
+    <div class="rules">
+      <h2>📜 Règlement Général LSSD</h2>
+      <p><strong>1. Respect du RolePlay (RP)</strong><br>Le RP doit être pris au sérieux en toutes circonstances. Tout comportement irréaliste est interdit.</p>
+      <p><strong>2. Respect des joueurs</strong><br>Aucune insulte, toxicité ou manque de respect ne sera toléré.</p>
+      <p><strong>3. Respect de la hiérarchie</strong><br>Les ordres doivent être respectés sans abus de discussion.</p>
+      <p><strong>4. Utilisation de la force</strong><br>Uniquement en dernier recours et justifiée RP.</p>
+      <p><strong>5. Procédures obligatoires</strong><br>Respect strict des procédures RP.</p>
+      <p><strong>6. Communication radio</strong><br>Clair, précis et professionnel.</p>
+      <p><strong>7. Metagaming / Powergaming</strong><br>Strictement interdits.</p>
+      <p><strong>8. Comportement professionnel</strong><br>Obligatoire en service.</p>
+      <p><strong>9. Sanctions</strong><br>Toute infraction sera sanctionnée.</p>
+      <p><strong>10. Engagement</strong><br>Respect total du règlement.</p>
+      <h2>🔒 Règlement Interne LSSD</h2>
+      <p><strong>11. Prise de service</strong><br>Vous devez être en tenue et équipé correctement avant toute prise de service.</p>
+      <p><strong>12. Véhicules de service</strong><br>Respecter l'utilisation des véhicules et éviter tout abus.</p>
+      <p><strong>13. Code radio</strong><br>Maîtrise obligatoire des codes (10-4, 10-20, etc.).</p>
+      <p><strong>14. Patrouille</strong><br>Les patrouilles doivent être cohérentes et RP.</p>
+      <p><strong>15. Priorité</strong><br>La sécurité prime toujours sur la rapidité.</p>
+      <p><strong>16. Backup</strong><br>Ne jamais hésiter à demander du renfort.</p>
+      <p><strong>17. Arrestation</strong><br>Respect total des procédures RP.</p>
+      <p><strong>18. Fouille</strong><br>Uniquement en RP et justifiée.</p>
+      <p><strong>19. Menottage</strong><br>Doit être cohérent avec la situation RP.</p>
+      <p><strong>20. Rapport</strong><br>Toute intervention importante doit être reportée.</p>
+      <p><strong>21. Discipline</strong><br>Respect strict des règles internes.</p>
+      <p><strong>22. Supérieurs</strong><br>Respect et écoute obligatoire.</p>
+      <p><strong>23. Comportement en service</strong><br>Sérieux et professionnel en permanence.</p>
+      <p><strong>24. Hors service</strong><br>Vous représentez le LSSD même hors service.</p>
+      <p><strong>25. Armes</strong><br>Utilisation strictement encadrée.</p>
+      <p><strong>26. Taser</strong><br>Utilisation RP uniquement.</p>
+      <p><strong>27. Poursuite</strong><br>Respect des règles RP et sécurité.</p>
+      <p><strong>28. Communication</strong><br>Clair et sans spam radio.</p>
+      <p><strong>29. Image du LSSD</strong><br>Vous devez représenter une image sérieuse.</p>
+      <p><strong>30. Sanctions internes</strong><br>Tout manquement peut entraîner rétrogradation ou exclusion.</p>
+    </div>
+    <button id="validateBtn" onclick="validateRules()" disabled style="opacity:0.5;cursor:not-allowed;">J'ai lu et j'accepte</button>
+  `;
+
+  const interval = setInterval(() => {
+    timeLeft--;
+    document.getElementById("time").innerText = timeLeft;
+    if(timeLeft <= 0) {
+      canAccess = true;
+      clearInterval(interval);
+      const btn = document.getElementById("validateBtn");
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
+    }
+  }, 1000);
+}
+
+function validateRules() {
+  if(!canAccess) {
+    document.getElementById("warning").style.display = "block";
+    return;
+  }
+  showQuiz();
+}
+
+function showQuiz() {
+  app.innerHTML = `
+    <h1>LSSD - BCSO Recrutement</h1>
+    <div class="progress"><div class="progress-bar" id="progress"></div></div>
+    <form id="quizForm">
+      <div id="questions"></div>
+      <input type="text" id="discord" name="discord" placeholder="Ton pseudo Discord" required style="width:100%;padding:10px;margin-bottom:15px;border-radius:10px;border:none;">
+      <button type="submit">Envoyer la candidature</button>
+    </form>
+  `;
+
+  initQuiz();
+}
+
+const questions = [
+  {q:"Que signifie LSSD ?", choices:["Los Santos Sheriff Department","Los Santos Security Division","Los Santos Service Department"], correct:"Los Santos Sheriff Department"},
+  {q:"Dans quel comté opère le LSSD ?", choices:["Los Santos","Blaine County","Vice City"], correct:"Blaine County"},
+  {q:"Quel grade est le plus élevé dans le LSSD ?", choices:["Shérif","Adjoint","Capitaine"], correct:"Shérif"},
+  {q:"Quel équipement est obligatoire pour chaque patrouille ?", choices:["Taser uniquement","Arme de service et radio","Véhicule personnel"], correct:"Arme de service et radio"},
+  {q:"Quelle est la couleur des uniformes du LSSD ?", choices:["Bleu marine","Noir","Vert"], correct:"Bleu marine"},
+  {q:"Quel code radio signifie 'Tout est clair' ?", choices:["10-4","10-20","10-7"], correct:"10-4"},
+  {q:"Quand est-il autorisé d'utiliser la force ?", choices:["Pour n'importe quelle raison","Uniquement RP et justifiée","Jamais"], correct:"Uniquement RP et justifiée"},
+  {q:"Que signifie 'Backup' ?", choices:["Demander un renfort","Faire un rapport","Se mettre en retrait"], correct:"Demander un renfort"},
+  {q:"Que doit faire un agent avant de commencer le service ?", choices:["Se connecter au forum","Être en tenue et équipé correctement","Aller directement en patrouille"], correct:"Être en tenue et équipé correctement"},
+  {q:"Quel véhicule est utilisé pour une patrouille standard ?", choices:["Voiture personnelle","Véhicule de service","Moto civile"], correct:"Véhicule de service"},
+  {q:"Que signifie '10-20' ?", choices:["Localisation","Tout va bien","Fin de patrouille"], correct:"Localisation"},
+  {q:"Qu'est-ce que le Metagaming ?", choices:["Respecter le RP","Utiliser des informations hors RP","Demander un grade"], correct:"Utiliser des informations hors RP"},
+  {q:"Qu'est-ce que le Powergaming ?", choices:["Forcer un RP irréaliste","Patrouiller efficacement","Respecter le règlement"], correct:"Forcer un RP irréaliste"},
+  {q:"Que doit contenir un rapport d'intervention ?", choices:["Seulement les arrestations","Toutes les interventions importantes","Seulement les accidents"], correct:"Toutes les interventions importantes"},
+  {q:"Qui peut donner des ordres aux adjoints ?", choices:["Tout le monde","Les supérieurs hiérarchiques","Les civils"], correct:"Les supérieurs hiérarchiques"},
+  {q:"Comment un agent doit-il communiquer sur la radio ?", choices:["Clair et précis","Rapidement et sans détails","Avec des insultes"], correct:"Clair et précis"},
+  {q:"Quand est-il possible de menotter une personne ?", choices:["Uniquement RP et cohérent","Toujours","Jamais"], correct:"Uniquement RP et cohérent"},
+  {q:"Quelle est la priorité lors d'une intervention ?", choices:["La rapidité","La sécurité","Les civils seulement"], correct:"La sécurité"},
+  {q:"Qu'est-ce qu'une patrouille RP cohérente ?", choices:["Se promener sans but","Respecter les règles et le RP","Ignorer les appels"], correct:"Respecter les règles et le RP"},
+  {q:"Qu'est-ce qui est strictement interdit en RP ?", choices:["Prendre une pause","Metagaming et Powergaming","Demander un grade"], correct:"Metagaming et Powergaming"},
+  {q:"Que doit faire un agent hors service ?", choices:["Ignorer le RP","Représenter une image sérieuse du LSSD","Tout est permis"], correct:"Représenter une image sérieuse du LSSD"},
+  {q:"Quel outil est utilisé pour enregistrer les interventions ?", choices:["Téléphone personnel","Radio uniquement","Rapport officiel"], correct:"Rapport officiel"},
+  {q:"Quand un agent peut-il utiliser un Taser ?", choices:["N'importe quand","Uniquement RP","Jamais"], correct:"Uniquement RP"},
+  {q:"Qui est responsable de la discipline dans le LSSD ?", choices:["Les civils","La hiérarchie du LSSD","Chaque agent individuellement"], correct:"La hiérarchie du LSSD"},
+  {q:"Que doit faire un agent en cas de poursuite ?", choices:["Ignorer la sécurité","Respecter les règles RP et sécurité","Arrêter immédiatement"], correct:"Respecter les règles RP et sécurité"},
+  {q:"Qu'est-ce qu'un engagement total ?", choices:["Respecter toutes les règles RP et internes","Se connecter tous les jours","Avoir un grade élevé"], correct:"Respecter toutes les règles RP et internes"},
+  {q:"Quelle est la conséquence d'un manquement au règlement ?", choices:["Aucune","Rétrogradation ou exclusion","Avertissement uniquement"], correct:"Rétrogradation ou exclusion"},
+  {q:"Quand demander un renfort ?", choices:["Quand on se sent en danger","Jamais","Seulement après l'arrestation"], correct:"Quand on se sent en danger"},
+  {q:"Quel est l'objectif principal du LSSD ?", choices:["Respecter la loi et RP","Amuser les civils","Faire la course"], correct:"Respecter la loi et RP"},
+  {q:"Que signifie '10-7' ?", choices:["Fin de service","Tout est clair","En patrouille"], correct:"Fin de service"},
+  {q:"Que doit contenir une demande de grade ?", choices:["Nom, rôle demandé, matricule","Seulement le nom","Nom et ancienneté"], correct:"Nom, rôle demandé, matricule"}
+];
+
+function initQuiz() {
+  const container = document.getElementById("questions");
+  const progress = document.getElementById("progress");
+
+  questions.forEach((item, index) => {
+    const div = document.createElement("div");
+    div.classList.add("question");
+
+    let html = `<label>${index+1}. ${item.q}</label>`;
+    item.choices.forEach(choice => {
+      html += `<label><input type="radio" name="q${index}" value="${choice}" required> ${choice}</label>`;
+    });
+
+    div.innerHTML = html;
+    container.appendChild(div);
+  });
+
+  document.addEventListener("change", () => {
+    const total = questions.length;
+    const answered = document.querySelectorAll("input[type=radio]:checked").length;
+    progress.style.width = (answered/total)*100 + "%";
+  });
+
+  document.getElementById("quizForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    let wrong = 0;
+    const formData = new FormData(this);
+    let answersText = "";
+
+    questions.forEach((item, index) => {
+      const answer = formData.get(`q${index}`);
+      if(answer !== item.correct) wrong++;
+      answersText += `Q${index+1}: ${answer} | ✅ ${item.correct}\n`;
+    });
+
+    const discord = formData.get("discord");
+    const result = wrong > 7 ? "REFUSÉ ❌" : "ACCEPTÉ ✅";
+
+    await fetch("https://discord.com/api/webhooks/1483591295292280906/c_C22Y-0qOBzbAuizdLWfEfI6XpjZfKY2RtKhVg8YQK5bJmnGC9vfSCogjgxj2pwXObo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content:`📋 Nouvelle candidature LSSD\n👤 Discord: ${discord}\n\n📊 Résultat: ${result}\n❌ Mauvaises réponses: ${wrong}\n\n🧠 Réponses:\n${answersText}`
+      })
+    });
+
+    if (wrong > 7) {
+      app.innerHTML = `
+        <div class="result"><h1>${result}</h1></div>
+        <pre>${answersText}</pre>
+      `;
+    } else {
+      app.innerHTML = `
+        <div class="result"><h1>${result}</h1></div>
+        <pre>${answersText}</pre>
+        
+        <div class="tabs">
+          <div class="tab active" onclick="showTab('mapTab', this)">Map</div>
+          <div class="tab" onclick="showTab('gradeTab', this)">Demande de grade</div>
+        </div>
+
+        <div id="mapTab" class="content">
+          <img src="map.png" alt="Map">
+        </div>
+
+        <div id="gradeTab" class="content" style="display:none;">
+          <p>Pour demander un grade, veuillez utiliser le format suivant :</p>
+          <pre>
+Nom & Prénom :
+Rôle demandé :
+Matricule : (souhaité)
+          </pre>
+        </div>
+      `;
+    }
+  });
+}
+
+function showTab(tabId, el) {
+  document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+  document.getElementById(tabId).style.display = 'block';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+showRules();
+</script>
+</body>
+</html>
